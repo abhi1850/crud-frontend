@@ -12,6 +12,10 @@ import { useNavigate } from 'react-router-dom';
 // Import API functions
 import { getAllData, deleteItem } from '../store/api';
 
+// Import react-toastify
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const View = () => {
@@ -25,8 +29,10 @@ const View = () => {
       try {
         const data = await getAllData();
         setData(data);
+        toast.success('Data loaded successfully!'); // Success toast after data is fetched
       } catch (error) {
         console.error('Error fetching data:', error);
+        toast.error('Failed to load data.'); // Error toast in case of failure
       }
     };
     fetchData();
@@ -44,9 +50,10 @@ const View = () => {
     try {
       await deleteItem(_id);
       setData(data?.filter((person) => person._id !== _id)); // Use _id to filter
-      console.log('Item deleted');
+      toast.success('Item deleted successfully!'); // Success toast after item is deleted
     } catch (err) {
       console.log('Error deleting item:', err);
+      toast.error('Failed to delete item.'); // Error toast in case of failure
     }
   };
 
@@ -288,6 +295,9 @@ const View = () => {
           </Grid>
         ))}
       </Grid>
+
+      {/* Add ToastContainer to display the toasts */}
+      <ToastContainer />
     </Grid>
   );
 };
