@@ -1,268 +1,305 @@
 import { useEffect, useState } from 'react';
-import { TextField, Grid, Button, Typography, Paper } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { Paper, Typography, Grid, Collapse, Box } from '@mui/material';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import LOGO from '/LOGO.png';
-import { useNavigate, useParams } from 'react-router-dom';
-import { getDataById, addData, updateData } from '../store/api';
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { useNavigate } from 'react-router-dom';
 
-const Form = () => {
-  const { id } = useParams();
+// Import API functions
+import { getAllData, deleteItem } from '../store/api';
+
+// Import react-toastify
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+const View = () => {
+  const [data, setData] = useState([]);
+  const [expanded, setExpanded] = useState(null); // changed to store _id
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    dob: null,
-    phoneNumber: '',
-    email: '',
-    address: '',
-    qualification: '',
-    occupation: '',
-    website: '',
-  });
-
-  const [errors, setErrors] = useState({
-    phoneNumber: '',
-    email: '',
-    website: '',
-  });
-
+  // Fetch data when the component mounts
   useEffect(() => {
-    if (id) {
-      getDataById(id) // Using the imported API function
-        .then((res) => {
-          setFormData({
-            name: res?.data?.response[0]?.name || '',
-            dob: new Date(res?.data?.response[0]?.dob),
-            phoneNumber: res?.data?.response[0]?.phoneNumber || '',
-            email: res?.data?.response[0]?.email || '',
-            address: res?.data?.response[0]?.address || '',
-            qualification: res?.data?.response[0]?.qualification || '',
-            occupation: res?.data?.response[0]?.occupation || '',
-            website: res?.data?.response[0]?.website || '',
-          });
-        })
-        .catch((err) => console.log(err));
-    }
-  }, [id]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handleDateChange = (date) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      dob: date,
-    }));
-  };
-
-  const validateForm = () => {
-    let formErrors = {};
-    const phoneRegex = /^[0-9]{10}$/;
-    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    const websiteRegex = /^(https?|chrome):\/\/[^\s$.?#].[^\s]*$/;
-
-    if (!phoneRegex.test(formData.phoneNumber)) {
-      formErrors.phoneNumber = 'Phone number must be 10 digits.';
-    }
-    if (!emailRegex.test(formData.email)) {
-      formErrors.email = 'Please enter a valid email address.';
-    }
-    if (!websiteRegex.test(formData.website)) {
-      formErrors.website = 'Please enter a valid website URL.';
-    }
-
-    setErrors(formErrors);
-    return Object.keys(formErrors).length === 0;
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      if (id) {
-        updateData(id, formData) // Using the imported API function
-          .then((res) => {
-            console.log('Update Response:', res.data);
-            navigate(`/view`);
-          })
-          .catch((err) => console.log(err));
-      } else {
-        addData(formData) // Using the imported API function
-          .then((res) => {
-            console.log('Add Response:', res.data);
-            navigate(`/view`);
-          })
-          .catch((err) => console.log(err));
+    const fetchData = async () => {
+      try {
+        const data = await getAllData();
+        setData(data);
+        toast.success('Data loaded successfully!'); // Success toast after data is fetched
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load data.'); // Error toast in case of failure
       }
+    };
+    fetchData();
+  }, []);
+
+  const handleExpandClick = (_id) => {
+    setExpanded(expanded === _id ? null : _id);
+  };
+
+  const handleEdit = (_id) => {
+    navigate(`/form/${_id}`);
+  };
+
+  const handleDelete = async (_id) => {
+    try {
+      await deleteItem(_id);
+      setData(data?.filter((person) => person._id !== _id)); // Use _id to filter
+      toast.success('Item deleted successfully!'); // Success toast after item is deleted
+    } catch (err) {
+      console.log('Error deleting item:', err);
+      toast.error('Failed to delete item.'); // Error toast in case of failure
     }
+  };
+
+  const chartData = {
+    labels: ['With Occupation', 'Without Occupation'],
+    datasets: [
+      {
+        data: [
+          data?.filter((person) => person.occupation).length,
+          data?.length - data?.filter((person) => person.occupation).length,
+        ],
+        backgroundColor: ['#36A2EB', '#FF6384'],
+        hoverBackgroundColor: ['#36A2EB', '#FF6384'],
+      },
+    ],
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      console.log("Is Admin User : ",sessionStorage.getItem?.isAdminUser);
-      <Paper
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          maxWidth: 600,
-          mx: 'auto',
-          p: 3,
-          backgroundColor: '#f4f4f4',
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-          borderRadius: '8px',
-        }}
-      >
-        <Grid container spacing={2} sx={{ p: 0 }}>
-          <Grid
-            item
-            xs={3}
+    <Grid container sx={{ padding: '16px' }}>
+      <Grid item xs={4}>
+        <Paper
+          elevation={3}
+          sx={{
+            backgroundColor: '#f4f4f4',
+            height: '55vh',
+            borderRadius: 2,
+            p: 2,
+            pb: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'sticky',
+            top: '16px',
+            transition: 'box-shadow 0.3s ease-in-out',
+            '&:hover': {
+              boxShadow: 6,
+            },
+          }}
+        >
+          <Typography variant="h6" gutterBottom>
+            Dashboard
+          </Typography>
+          <Typography variant="body2">Total Records: {data?.length}</Typography>
+          <Typography variant="body2">
+            Occupation Count:{' '}
+            {data?.filter((person) => person.occupation).length}
+          </Typography>
+          <Typography variant="body2">
+            No Occupation:{' '}
+            {data?.length - data?.filter((person) => person.occupation).length}
+          </Typography>
+          <Box
             sx={{
-              p: 0,
-              height: '100px',
+              flexGrow: 1,
+              display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
+              mt: 1,
             }}
           >
-            <img
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                zIndex: 100,
-              }}
-              src={LOGO}
-              alt="Logo"
-            />
-          </Grid>
-          <Grid item xs={9} sx={{ p: 0, mt: 3 }}>
-            <Typography
-              variant="h5"
+            <Pie data={chartData} style={{ maxHeight: '300px' }} />
+          </Box>
+        </Paper>
+      </Grid>
+
+      <Grid
+        item
+        xs={8}
+        sx={{ maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}
+      >
+        {data?.map((person) => (
+          <Grid item sm={12} key={person._id} sx={{ mb: 3, ml: 2, mr: 2 }}>
+            <Paper
+              elevation={3}
               sx={{
-                p: 0,
-                pl: 6,
-                fontWeight: 'bold',
-                color: 'rgba(223, 43, 135, 0.8)',
+                backgroundColor: '#f4f4f4',
+                borderRadius: 2,
+                p: 2,
+                pb: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'box-shadow 0.3s ease-in-out',
+                '&:hover': {
+                  boxShadow: 6,
+                },
               }}
             >
-              Personal Info
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Name"
-              variant="outlined"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
-          </Grid>
+              <Grid container xs={12} sx={{ display: 'flex' }}>
+                <Grid item xs={10}>
+                  <Grid container sx={{ p: 1 }}>
+                    <Grid item xs={12}>
+                      <Typography variant="h6" gutterBottom>
+                        {person.name}
+                      </Typography>
+                    </Grid>
+                    <Grid
+                      item
+                      xs={5}
+                      sx={{ borderRight: '2px solid rgba(223, 43, 135, 0.8)' }}
+                    >
+                      <Typography variant="body2">
+                        {person.qualification}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6} sx={{ pl: 1 }}>
+                      <Typography variant="body2">
+                        {person.occupation}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Grid>
+                <Grid
+                  item
+                  xs={2}
+                  sx={{
+                    p: 0,
+                    height: '80px',
+                    justifyContent: 'right',
+                    alignItems: 'center',
+                  }}
+                >
+                  <img
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain',
+                      zIndex: 100,
+                    }}
+                    src={LOGO}
+                    alt="Logo"
+                  />
+                </Grid>
+              </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <DatePicker
-              label="Date of Birth"
-              value={formData.dob}
-              onChange={handleDateChange}
-              renderInput={(params) => (
-                <TextField {...params} fullWidth required />
-              )}
-            />
-          </Grid>
+              <Collapse
+                in={expanded === person._id}
+                timeout="auto"
+                unmountOnExit
+              >
+                <Grid container spacing={2} sx={{ mt: 2 }}>
+                  <Grid item xs={12}>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 500, color: '#333', mb: 1 }}
+                    >
+                      Date of Birth: {new Date(person.dob).toLocaleDateString()}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 500, color: '#333', mb: 1 }}
+                    >
+                      Phone: {person.phoneNumber}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 500, color: '#333', mb: 1 }}
+                    >
+                      Email: {person.email}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 500, color: '#333', mb: 1 }}
+                    >
+                      Address: {person.address}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 500, color: '#333', mb: 1 }}
+                    >
+                      Occupation: {person.occupation}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </Collapse>
 
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Phone Number"
-              variant="outlined"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              required
-              error={!!errors.phoneNumber}
-              helperText={errors.phoneNumber}
-            />
-          </Grid>
+              <Grid container spacing={2} sx={{ mt: 2 }}>
+                <Grid
+                  item
+                  xs={6}
+                  onClick={() => handleExpandClick(person._id)} // Use _id here
+                  sx={{
+                    cursor: 'pointer',
+                    color:
+                      expanded === person._id
+                        ? 'secondary.main'
+                        : 'primary.main',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    display: 'flex',
+                    borderTop: '2px solid rgba(223, 43, 135, 0.8)',
+                    borderRight: '3px solid  rgba(223, 43, 135, 0.8)',
+                  }}
+                >
+                  {expanded === person._id ? (
+                    <>
+                      <VisibilityOffIcon sx={{ mr: 1 }} />
+                      Hide Details
+                    </>
+                  ) : (
+                    <>
+                      <VisibilityIcon sx={{ mr: 1 }} />
+                      View Details
+                    </>
+                  )}
+                </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Email"
-              variant="outlined"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              type="email"
-              required
-              error={!!errors.email}
-              helperText={errors.email}
-            />
+                <Grid
+                  item
+                  xs={6}
+                  onClick={
+                    () =>
+                      expanded === person._id
+                        ? handleEdit(person._id)
+                        : handleDelete(person._id) // Use _id here
+                  }
+                  sx={{
+                    cursor: 'pointer',
+                    color:
+                      expanded === person._id ? 'success.main' : 'error.main',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    display: 'flex',
+                    borderTop: '2px solid rgba(223, 43, 135, 0.8)',
+                  }}
+                >
+                  {expanded === person._id ? (
+                    <>
+                      <EditIcon sx={{ mr: 1 }} />
+                      Edit Item
+                    </>
+                  ) : (
+                    <>
+                      <DeleteIcon sx={{ mr: 1 }} />
+                      Delete Item
+                    </>
+                  )}
+                </Grid>
+              </Grid>
+            </Paper>
           </Grid>
+        ))}
+      </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Address"
-              variant="outlined"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Qualification"
-              variant="outlined"
-              name="qualification"
-              value={formData.qualification}
-              onChange={handleChange}
-              required
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Occupation"
-              variant="outlined"
-              name="occupation"
-              value={formData.occupation}
-              onChange={handleChange}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Website"
-              variant="outlined"
-              name="website"
-              value={formData.website}
-              onChange={handleChange}
-              required
-              error={!!errors.website}
-              helperText={errors.website}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Button type="submit" variant="contained" color="primary" fullWidth>
-              Submit
-            </Button>
-          </Grid>
-        </Grid>
-      </Paper>
-    </LocalizationProvider>
+      {/* Add ToastContainer to display the toasts */}
+      <ToastContainer />
+    </Grid>
   );
 };
 
-export default Form;
+export default View;

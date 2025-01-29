@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'https://backend-fz9h.onrender.com';
 
 export const signIn = async (username, password) => {
   try {

@@ -16,6 +16,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 const View = () => {
   const [data, setData] = useState([]);
+  const [expanded, setExpanded] = useState(null); // changed to store _id
   const navigate = useNavigate();
 
   // Fetch data when the component mounts
@@ -31,21 +32,18 @@ const View = () => {
     fetchData();
   }, []);
 
-  const [expanded, setExpanded] = useState(null);
-
-  const handleExpandClick = (index) => {
-    setExpanded(expanded === index ? null : index);
+  const handleExpandClick = (_id) => {
+    setExpanded(expanded === _id ? null : _id);
   };
 
-  const handleEdit = (id) => {
-    navigate(`/form/${id}`);
+  const handleEdit = (_id) => {
+    navigate(`/form/${_id}`);
   };
 
-  const handleDelete = async (index) => {
-    const item = data[index];
+  const handleDelete = async (_id) => {
     try {
-      await deleteItem(item.id);
-      setData(data.filter((person) => person.id !== item.id));
+      await deleteItem(_id);
+      setData(data?.filter((person) => person._id !== _id)); // Use _id to filter
       console.log('Item deleted');
     } catch (err) {
       console.log('Error deleting item:', err);
@@ -57,8 +55,8 @@ const View = () => {
     datasets: [
       {
         data: [
-          data.filter((person) => person.occupation).length,
-          data.length - data.filter((person) => person.occupation).length,
+          data?.filter((person) => person.occupation).length,
+          data?.length - data?.filter((person) => person.occupation).length,
         ],
         backgroundColor: ['#36A2EB', '#FF6384'],
         hoverBackgroundColor: ['#36A2EB', '#FF6384'],
@@ -90,14 +88,14 @@ const View = () => {
           <Typography variant="h6" gutterBottom>
             Dashboard
           </Typography>
-          <Typography variant="body2">Total Records: {data.length}</Typography>
+          <Typography variant="body2">Total Records: {data?.length}</Typography>
           <Typography variant="body2">
             Occupation Count:{' '}
-            {data.filter((person) => person.occupation).length}
+            {data?.filter((person) => person.occupation).length}
           </Typography>
           <Typography variant="body2">
             No Occupation:{' '}
-            {data.length - data.filter((person) => person.occupation).length}
+            {data?.length - data?.filter((person) => person.occupation).length}
           </Typography>
           <Box
             sx={{
@@ -118,8 +116,8 @@ const View = () => {
         xs={8}
         sx={{ maxHeight: 'calc(100vh - 32px)', overflowY: 'auto' }}
       >
-        {data.map((person, index) => (
-          <Grid item sm={12} key={index} sx={{ mb: 3, ml: 2, mr: 2 }}>
+        {data?.map((person) => (
+          <Grid item sm={12} key={person._id} sx={{ mb: 3, ml: 2, mr: 2 }}>
             <Paper
               elevation={3}
               sx={{
@@ -182,7 +180,11 @@ const View = () => {
                 </Grid>
               </Grid>
 
-              <Collapse in={expanded === index} timeout="auto" unmountOnExit>
+              <Collapse
+                in={expanded === person._id}
+                timeout="auto"
+                unmountOnExit
+              >
                 <Grid container spacing={2} sx={{ mt: 2 }}>
                   <Grid item xs={12}>
                     <Typography
@@ -223,11 +225,13 @@ const View = () => {
                 <Grid
                   item
                   xs={6}
-                  onClick={() => handleExpandClick(index)}
+                  onClick={() => handleExpandClick(person._id)} // Use _id here
                   sx={{
                     cursor: 'pointer',
                     color:
-                      expanded === index ? 'secondary.main' : 'primary.main',
+                      expanded === person._id
+                        ? 'secondary.main'
+                        : 'primary.main',
                     justifyContent: 'center',
                     alignItems: 'center',
                     display: 'flex',
@@ -235,7 +239,7 @@ const View = () => {
                     borderRight: '3px solid  rgba(223, 43, 135, 0.8)',
                   }}
                 >
-                  {expanded === index ? (
+                  {expanded === person._id ? (
                     <>
                       <VisibilityOffIcon sx={{ mr: 1 }} />
                       Hide Details
@@ -251,21 +255,23 @@ const View = () => {
                 <Grid
                   item
                   xs={6}
-                  onClick={() =>
-                    expanded === index
-                      ? handleEdit(person.id)
-                      : handleDelete(index)
+                  onClick={
+                    () =>
+                      expanded === person._id
+                        ? handleEdit(person._id)
+                        : handleDelete(person._id) // Use _id here
                   }
                   sx={{
                     cursor: 'pointer',
-                    color: expanded === index ? 'success.main' : 'error.main',
+                    color:
+                      expanded === person._id ? 'success.main' : 'error.main',
                     justifyContent: 'center',
                     alignItems: 'center',
                     display: 'flex',
                     borderTop: '2px solid rgba(223, 43, 135, 0.8)',
                   }}
                 >
-                  {expanded === index ? (
+                  {expanded === person._id ? (
                     <>
                       <EditIcon sx={{ mr: 1 }} />
                       Edit Item
