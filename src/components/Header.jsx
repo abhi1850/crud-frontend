@@ -21,6 +21,10 @@ const Header = () => {
     navigate('/'); // Redirect to login page
   };
 
+  const handleRegister = () => {
+    navigate('/Register');
+  };
+
   return (
     <Grid
       container
@@ -103,6 +107,7 @@ const Header = () => {
           }}
         >
           <MenuItem onClick={handleLogout}>Logout</MenuItem>
+          <MenuItem onClick={handleRegister}>Register</MenuItem>
         </Menu>
       </Grid>
     </Grid>

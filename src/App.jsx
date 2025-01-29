@@ -12,6 +12,7 @@ import Sidebar from './components/Sidebar';
 import Form from './pages/Form';
 import View from './pages/View';
 import Login from './auth/Login';
+import Register from './auth/Register';
 import ProtectedRoute from './auth/ProtectedRoute';
 
 const Layout = ({ children }) => {
@@ -50,6 +51,7 @@ const App = () => {
                   <Route path="/form" element={<Form />} />
                   <Route path="/view" element={<View />} />
                   <Route path="*" element={<Navigate to="/" />} />
+                  <Route path="/register" element={<Register />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>

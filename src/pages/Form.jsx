@@ -8,7 +8,7 @@ import LOGO from '/LOGO.png';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getDataById, addData, updateData } from '../store/api';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import styles
+import 'react-toastify/dist/ReactToastify.css';
 
 const Form = () => {
   const { id } = useParams();
@@ -152,7 +152,6 @@ const Form = () => {
               required
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <DatePicker
               label="Date of Birth"
@@ -163,7 +162,6 @@ const Form = () => {
               )}
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -177,7 +175,6 @@ const Form = () => {
               helperText={formik.errors.phoneNumber}
             />
           </Grid>
-
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -192,7 +189,6 @@ const Form = () => {
               helperText={formik.errors.email}
             />
           </Grid>
-
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -204,7 +200,6 @@ const Form = () => {
               required
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -216,7 +211,6 @@ const Form = () => {
               required
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -227,7 +221,6 @@ const Form = () => {
               onChange={formik.handleChange}
             />
           </Grid>
-
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -241,7 +234,6 @@ const Form = () => {
               helperText={formik.errors.website}
             />
           </Grid>
-
           <Grid item xs={12}>
             <Button type="submit" variant="contained" color="primary" fullWidth>
               Submit
